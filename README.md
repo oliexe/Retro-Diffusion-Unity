@@ -14,8 +14,8 @@ Based on [Retro Diffusion API Examples](https://github.com/Retro-Diffusion/api-e
 
 ## Setup
 
-1. Import "Editor" folder into your Unity project.
-2. Open the Retro Diffusion Generator window in Unity by going to `Window > Retro Diffusion Generator`
+1. Import package into your Unity project.
+2. Open the Retro Diffusion Generator window in Unity by going to `Window > Retro Diffusion`
 3. Enter your API key in the API Settings section (You need to create an account at https://retrodiffusion.ai/ to get an API key)
 4. Configure the save path where generated images will be stored (default is "Assets/RetroImages")
 
