@@ -6,7 +6,7 @@ This Unity Editor plugin allows you to generate pixel art and retro-style images
 
 ## Features
 
-- Generate pixel art images with different styles and settings from your Unity editor.
+- Generate pixel art images (sprites, sheets, animations) with different styles and settings from your Unity editor.
 - Unity texture import settings.
 
 ## Setup
