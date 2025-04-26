@@ -1,8 +1,4 @@
-<p align="center">
-  <img src="resources/wordmark.png" style="display: block; margin-left: auto; margin-right: auto; max-width: 50%;" />
-</p>
-
-# Retro Diffusion AI Plugin for Unity
+# Retro Diffusion Plugin for Unity
 
 ### Warning: This is still very early version I made for my project, so feel free to use it, let me know about issues but It's probably not very stable.
 
