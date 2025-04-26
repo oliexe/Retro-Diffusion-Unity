@@ -1023,9 +1023,11 @@ namespace RetroDiffusion
                     _footerText = new GUIStyle(GUI.skin.label)
                     {
                         fontSize = 10,
-                        alignment = TextAnchor.MiddleCenter,
+                        alignment = TextAnchor.MiddleLeft,
                         normal = { textColor = new Color(0.5f, 0.5f, 0.5f) },
-                        margin = new RectOffset(0, 0, 10, 0)
+                        margin = new RectOffset(10, 10, 4, 4),
+                        wordWrap = true,
+                        richText = true
                     };
                 }
                 
@@ -1190,6 +1192,7 @@ namespace RetroDiffusion
         private bool _showPaletteSettings = false;
         private bool _showTextureImportSettings = false;
         private RetroNativeResolutionSettings _nativeResSettings = new RetroNativeResolutionSettings();
+        private Texture2D _logoTexture;
 
         private string _selectedModelName = "RD FLUX";
         private string _selectedStyleName = "Default";
@@ -1197,7 +1200,7 @@ namespace RetroDiffusion
         private List<string> _styleNames;
         private Dictionary<string, RetroModel> _modelsByName;
 
-        [MenuItem("Window/Retro Diffusion Generator")]
+        [MenuItem("Window/Retro Diffusion")]
         public static void ShowWindow()
         {
             GetWindow<RetroUI>("Retro Diffusion");
@@ -1206,6 +1209,32 @@ namespace RetroDiffusion
         private void OnEnable()
         {
             InitializeData();
+            // Try multiple methods to load the logo
+            _logoTexture = EditorGUIUtility.Load("Assets/Editor/RetroDiffusion/Resources/logo.png") as Texture2D;
+            
+            if (_logoTexture == null)
+            {
+                _logoTexture = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Editor/RetroDiffusion/Resources/logo.png");
+            }
+
+            if (_logoTexture == null)
+            {
+                // Try loading from Resources
+                _logoTexture = Resources.Load<Texture2D>("logo");
+            }
+
+            Debug.Log($"Logo texture loaded: {_logoTexture != null}");
+            if (_logoTexture == null)
+            {
+                Debug.LogWarning("Could not load Retro Diffusion logo texture. Attempted paths:");
+                Debug.LogWarning("1. EditorGUIUtility.Load: Assets/Editor/RetroDiffusion/Resources/logo.png");
+                Debug.LogWarning("2. AssetDatabase.LoadAssetAtPath: Assets/Editor/RetroDiffusion/Resources/logo.png");
+                Debug.LogWarning("3. Resources.Load: logo");
+            }
+            else
+            {
+                Debug.Log($"Logo texture dimensions: {_logoTexture.width}x{_logoTexture.height}");
+            }
         }
 
         private void InitializeData()
@@ -1246,7 +1275,29 @@ namespace RetroDiffusion
         {
             _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition);
 
-            RetroUIUtils.DrawHeader("Retro Diffusion Generator");
+            // Display the logo at the top if available
+            if (_logoTexture != null)
+            {
+                float aspectRatio = (float)_logoTexture.width / _logoTexture.height;
+                float desiredWidth = EditorGUIUtility.currentViewWidth - 40; // More padding on sides
+                float desiredHeight = desiredWidth / aspectRatio;
+                
+                // Ensure minimum and maximum height
+                desiredHeight = Mathf.Clamp(desiredHeight, 60, 200);
+                
+                Rect logoRect = EditorGUILayout.GetControlRect(false, desiredHeight);
+                logoRect.width = desiredWidth;
+                logoRect.x = (EditorGUIUtility.currentViewWidth - desiredWidth) / 2;
+                
+                EditorGUI.DrawPreviewTexture(logoRect, _logoTexture, null, ScaleMode.ScaleToFit);
+                EditorGUILayout.Space(20);
+            }
+            else
+            {
+                Debug.LogWarning("Logo texture is null during OnGUI");
+            }
+
+            RetroUIUtils.DrawHeader("Retro Diffusion");
             EditorGUILayout.Space();
 
             // API Settings Foldout
@@ -1258,29 +1309,6 @@ namespace RetroDiffusion
                 {
                     _apiKey = newApiKey;
                     RetroInputManager.SetApiKey(_apiKey);
-                }
-
-                string newSavePath = EditorGUILayout.TextField("Save Path", _savePath);
-                if (newSavePath != _savePath)
-                {
-                    _savePath = newSavePath;
-                    RetroInputManager.SetSavePath(_savePath);
-                }
-
-                if (GUILayout.Button("Browse...", GUILayout.Width(100)))
-                {
-                    string path = EditorUtility.OpenFolderPanel("Select Save Directory", "Assets", "");
-                    if (!string.IsNullOrEmpty(path))
-                    {
-                        string relativePath = path;
-                        if (path.StartsWith(Application.dataPath))
-                        {
-                            relativePath = "Assets" + path.Substring(Application.dataPath.Length);
-                        }
-                        
-                        _savePath = relativePath;
-                        RetroInputManager.SetSavePath(_savePath);
-                    }
                 }
 
                 if (GUILayout.Button("Check Credits"))
@@ -1295,6 +1323,36 @@ namespace RetroDiffusion
                     EditorGUILayout.LabelField($"Remaining Credits: {credits}");
                 }
             }
+
+            RetroUIUtils.DrawSeparator();
+
+            // Output Settings
+            RetroUIUtils.DrawSubHeader("Output Settings");
+            EditorGUILayout.BeginHorizontal();
+            string newSavePath = EditorGUILayout.TextField("Save Path", _savePath);
+            if (newSavePath != _savePath)
+            {
+                _savePath = newSavePath;
+                RetroInputManager.SetSavePath(_savePath);
+            }
+            
+            if (GUILayout.Button("Browse...", GUILayout.Width(100)))
+            {
+                string path = EditorUtility.OpenFolderPanel("Select Save Directory", "Assets", "");
+                if (!string.IsNullOrEmpty(path))
+                {
+                    string relativePath = path;
+                    if (path.StartsWith(Application.dataPath))
+                    {
+                        relativePath = "Assets" + path.Substring(Application.dataPath.Length);
+                    }
+                    
+                    _savePath = relativePath;
+                    RetroInputManager.SetSavePath(_savePath);
+                }
+            }
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.Space();
 
             RetroUIUtils.DrawSeparator();
 
@@ -1363,12 +1421,14 @@ namespace RetroDiffusion
             }
 
             // Prompt and basic settings
-            string newPrompt = EditorGUILayout.TextField("Prompt", _settings.prompt);
+            EditorGUILayout.LabelField("Prompt");
+            string newPrompt = EditorGUILayout.TextArea(_settings.prompt, GUILayout.Height(60));
             if (newPrompt != _settings.prompt)
             {
                 _settings.prompt = newPrompt;
                 RetroSettingsStorage.SaveSettings(_settings);
             }
+            EditorGUILayout.Space(5);
 
             // Only allow dimension changes if not animation
             if (_settings.promptStyle != "animation_four_angle_walking")
@@ -1707,17 +1767,15 @@ namespace RetroDiffusion
             // Footer with credits and GitHub link
             RetroUIUtils.DrawSeparator();
             
+
+            // Plugin attribution
             EditorGUILayout.BeginHorizontal();
+        
             GUILayout.FlexibleSpace();
-            EditorGUILayout.LabelField("Made by", RetroUIStyles.FooterText, GUILayout.Width(50));
-            
-            // GitHub link
-            if (GUILayout.Button("oliexe", RetroUIStyles.FooterLink, GUILayout.Width(50)))
-            {
-                Application.OpenURL("https://github.com/oliexe/Retro-Diffusion-Unity");
-            }
+            GUILayout.Label("Retro Diffusion is owned / made by Astropulse, LLC. Unity plugin by oliexe (https://github.com/oliexe/Retro-Diffusion-Unity) ", RetroUIStyles.FooterText);
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndHorizontal();
+            EditorGUILayout.Space(5);
             
             EditorGUILayout.EndScrollView();
         }
