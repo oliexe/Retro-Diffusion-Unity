@@ -1,6 +1,6 @@
 # Retro Diffusion Plugin for Unity
 
-This Unity Editor plugin allows you to generate pixel art and retro-style images using the Retro Diffusion API and save them directly into your Unity project.
+This Unity Editor plugin allows you to generate pixel art and retro-style images using the Retro Diffusion API and import them directly into your Unity project, and optionally generate corresponding Sprite assets for immediate use in your scenes. The plugin also supports customizing import settings such as texture compression, filter modes, and sprite pivot configurations, making it easy to integrate AI-generated retro visuals into your workflow.
 
 <img src="https://i.ibb.co/DH8s5st6/Screenshot-2025-04-27-at-15-45-19.png" alt="Unity Editor" width="800">
 
